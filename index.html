@@ -24,3 +24,481 @@ svg{width:100%;height:100%;overflow:visible}
 
 .sector{
   stroke:#111;
+  stroke-width:2;
+  cursor:pointer;
+  fill:#fbfaf6
+}
+
+.sector.black{
+  fill:#111;
+  stroke:#fff
+}
+
+.sector.selected,.centre.selected{
+  fill:var(--red);
+  stroke:#111
+}
+
+.word{
+  font-family:Arial,sans-serif;
+  font-weight:600;
+  letter-spacing:.02em;
+  pointer-events:none;
+  fill:#111
+}
+
+.inverse,.selectedword{
+  fill:#fff
+}
+
+.centre{
+  fill:#fbfaf6;
+  stroke:#111;
+  stroke-width:2.5;
+  cursor:pointer
+}
+
+.ctrl{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:15px
+}
+
+#path,#status,.card{
+  max-width:750px;
+  margin:10px auto;
+  padding:12px;
+  background:#fff;
+  border:1px solid #cac6bc;
+  line-height:1.45
+}
+
+.archive button{
+  display:block;
+  width:100%;
+  text-align:left;
+  margin:8px 0;
+  padding:12px;
+  background:#fff;
+  border:1px solid #222;
+  font:600 1rem Arial;
+  cursor:pointer
+}
+
+.done{
+  color:#197238;
+  font-weight:bold
+}
+
+.page h2{
+  text-align:center;
+  font:500 1.7rem Georgia
+}
+
+@media(max-width:520px){
+  main{padding:14px 2px}
+}
+</style>
+</head>
+
+<body>
+<main>
+
+<header>
+<h1>IL BERSAGLIO</h1>
+<p class="sub">Collega tutte le parole una sola volta e raggiungi il centro.</p>
+</header>
+
+<nav class="nav">
+<button class="active" data-page="today">Gioca oggi</button>
+<button data-page="archive">Archivio</button>
+</nav>
+
+<section class="page active" id="today">
+<div class="meta">
+<b id="title"></b> ·
+<span id="date"></span> ·
+<span id="difficulty"></span>
+</div>
+
+<div class="stage">
+<svg viewBox="0 0 800 800" aria-label="Bersaglio circolare">
+<g id="board"></g>
+</svg>
+</div>
+
+<div class="ctrl">
+<button id="undo">Annulla ultimo passo</button>
+<button id="clear">Cancella percorso</button>
+<button class="primary" id="check">Verifica soluzione</button>
+<button id="hint">Indizio</button>
+</div>
+
+<div id="path"></div>
+<div id="status"></div>
+</section>
+
+<section class="page" id="archive">
+<div class="card">
+<h2>Archivio</h2>
+<p>Scegli un Bersaglio da giocare.</p>
+<div class="archive" id="archiveList"></div>
+</div>
+</section>
+
+</main>
+
+<script>
+let data,current,path=[],hintIndex=0;
+
+const NS='http://www.w3.org/2000/svg';
+const B=document.querySelector('#board');
+
+const E=(name,attrs={})=>{
+  const el=document.createElementNS(NS,name);
+  for(const key in attrs)el.setAttribute(key,attrs[key]);
+  return el;
+};
+
+const P=(radius,angle)=>{
+  const radians=(angle-90)*Math.PI/180;
+  return [
+    400+radius*Math.cos(radians),
+    400+radius*Math.sin(radians)
+  ];
+};
+
+const W=(outer,inner,start,end)=>{
+  const [x1,y1]=P(outer,start);
+  const [x2,y2]=P(outer,end);
+  const [x3,y3]=P(inner,end);
+  const [x4,y4]=P(inner,start);
+
+  return `
+    M${x1} ${y1}
+    A${outer} ${outer} 0 0 1 ${x2} ${y2}
+    L${x3} ${y3}
+    A${inner} ${inner} 0 0 0 ${x4} ${y4}
+    Z
+  `;
+};
+
+const ARC=(radius,start,end,reverse)=>{
+  const [x1,y1]=P(radius,start);
+  const [x2,y2]=P(radius,end);
+
+  return reverse
+    ? `M${x2} ${y2} A${radius} ${radius} 0 0 0 ${x1} ${y1}`
+    : `M${x1} ${y1} A${radius} ${radius} 0 0 1 ${x2} ${y2}`;
+};
+
+function key(){
+  return 'bersaglio-progress-'+current.id;
+}
+
+function saved(){
+  try{
+    return JSON.parse(localStorage.getItem(key()));
+  }catch(e){
+    return null;
+  }
+}
+
+function save(completed=false){
+  if(!current)return;
+  const old=saved()||{};
+
+  localStorage.setItem(
+    key(),
+    JSON.stringify({
+      path:path,
+      completed:completed||old.completed===true
+    })
+  );
+}
+
+function erase(){
+  if(current)localStorage.removeItem(key());
+}
+
+function validPath(list){
+  return Array.isArray(list) &&
+    list.length &&
+    list[0]===current.start &&
+    list.every(word=>current.solution.includes(word));
+}
+
+function rings(words){
+  const w=[...words];
+
+  return [
+    [390,325,w.splice(0,7),0,0],
+    [325,255,w.splice(0,5),1,5],
+    [255,185,w.splice(0,4),0,25],
+    [185,115,w.splice(0,4),1,0]
+  ];
+}
+
+function msg(text){
+  document.querySelector('#status').innerHTML=text;
+}
+
+function draw(){
+  B.innerHTML='';
+
+  const defs=E('defs');
+  B.append(defs);
+
+  let number=0;
+
+  rings(current.words).forEach(([outer,inner,words,black,offset])=>{
+    words.forEach((word,index)=>{
+      const start=offset+index*360/words.length;
+      const end=offset+(index+1)*360/words.length;
+      const middle=(start+end)/2;
+      const selected=path.includes(word);
+
+      const sector=E('path',{
+        d:W(outer,inner,start,end),
+        class:'sector '+(black?'black ':'')+(selected?'selected':'')
+      });
+
+      sector.onclick=()=>pick(word);
+      B.append(sector);
+
+      const textRadius=(outer+inner)/2;
+      const reverse=middle>90&&middle<270;
+      const pathId='word-arc-'+number++;
+
+      const arc=E('path',{
+        id:pathId,
+        d:ARC(textRadius,start,end,reverse),
+        fill:'none'
+      });
+
+      defs.append(arc);
+
+      const text=E('text',{
+        class:'word '+(black?'inverse ':'')+(selected?'selectedword':''),
+        'font-size':'20'
+      });
+
+      const textPath=E('textPath',{
+        href:'#'+pathId,
+        startOffset:'50%',
+        'text-anchor':'middle'
+      });
+
+      textPath.textContent=word;
+      text.append(textPath);
+      B.append(text);
+
+      const availableArc=textRadius*(end-start)*Math.PI/180;
+      const measuredText=text.getComputedTextLength();
+      const maxFont=20;
+      const minFont=8;
+      const safeSpace=0.84;
+
+      const fittedFont=Math.max(
+        minFont,
+        Math.min(
+          maxFont,
+          maxFont*(availableArc*safeSpace/measuredText)
+        )
+      );
+
+      text.setAttribute('font-size',fittedFont);
+    });
+  });
+
+  const endSelected=path.includes(current.end);
+
+  const centre=E('circle',{
+    cx:400,
+    cy:400,
+    r:115,
+    class:'centre '+(endSelected?'selected':'')
+  });
+
+  centre.onclick=()=>pick(current.end);
+  B.append(centre);
+
+  const centreText=E('text',{
+    x:400,
+    y:400,
+    'text-anchor':'middle',
+    'dominant-baseline':'middle',
+    class:'word '+(endSelected?'selectedword':''),
+    'font-size':'21'
+  });
+
+  centreText.textContent=current.end;
+  B.append(centreText);
+
+  document.querySelector('#path').innerHTML=
+    '<b>Percorso ('+
+    path.length+
+    '/'+
+    current.solution.length+
+    '):</b> '+
+    path.join(' → ');
+}
+
+function pick(word){
+  const index=path.indexOf(word);
+
+  if(index===0)return;
+
+  if(index>0){
+    path=path.slice(0,index);
+    msg('Parola deselezionata.');
+  }else{
+    path.push(word);
+    msg(word===current.end
+      ?'Parola finale selezionata.'
+      :'Parola aggiunta.'
+    );
+  }
+
+  save();
+  draw();
+}
+
+function load(puzzle){
+  current=puzzle;
+  hintIndex=0;
+
+  const old=saved();
+  path=validPath(old?.path)?old.path:[puzzle.start];
+
+  document.querySelector('#title').textContent=puzzle.title;
+
+  document.querySelector('#date').textContent=
+    new Date(puzzle.date+'T12:00:00').toLocaleDateString(
+      'it-IT',
+      {
+        day:'numeric',
+        month:'long',
+        year:'numeric'
+      }
+    );
+
+  document.querySelector('#difficulty').textContent=puzzle.difficulty;
+
+  msg(
+    old?.completed
+      ?'<b class="done">✓ Bersaglio già completato su questo dispositivo.</b>'
+      :'Tocca le parole nell’ordine che ritieni corretto.'
+  );
+
+  draw();
+  show('today');
+}
+
+function show(pageId){
+  document.querySelectorAll('.page').forEach(page=>{
+    page.classList.toggle('active',page.id===pageId);
+  });
+
+  document.querySelectorAll('.nav button').forEach(button=>{
+    button.classList.toggle('active',button.dataset.page===pageId);
+  });
+}
+
+document.querySelectorAll('.nav button').forEach(button=>{
+  button.onclick=()=>show(button.dataset.page);
+});
+
+document.querySelector('#undo').onclick=()=>{
+  if(path.length>1){
+    path.pop();
+    save();
+    msg('Ultimo passo annullato.');
+    draw();
+  }
+};
+
+document.querySelector('#clear').onclick=()=>{
+  path=[current.start];
+  erase();
+  msg('Percorso e salvataggio cancellati.');
+  draw();
+};
+
+document.querySelector('#check').onclick=()=>{
+  if(path.length<current.solution.length){
+    return msg('Completa il percorso prima della verifica.');
+  }
+
+  if(path.every((word,index)=>word===current.solution[index])){
+    save(true);
+    renderArchive();
+    msg('<b class="done">✓ Complimenti! Bersaglio completato.</b>');
+  }else{
+    msg('<b>Il percorso non è corretto.</b> Puoi correggerlo e verificare di nuovo.');
+  }
+};
+
+document.querySelector('#hint').onclick=()=>{
+  const hint=current.hints?.[hintIndex++];
+
+  msg(
+    hint
+      ?'<b>Indizio:</b> '+hint
+      :'Non ci sono altri indizi.'
+  );
+};
+
+function renderArchive(){
+  const archive=document.querySelector('#archiveList');
+  archive.innerHTML='';
+
+  data.puzzles
+    .sort((a,b)=>b.date.localeCompare(a.date))
+    .forEach(puzzle=>{
+      const button=document.createElement('button');
+      const stored=localStorage.getItem('bersaglio-progress-'+puzzle.id);
+
+      let completed=false;
+
+      try{
+        completed=JSON.parse(stored)?.completed===true;
+      }catch(e){}
+
+      button.innerHTML=
+        (completed?'<span class="done">✓ </span>':'')+
+        puzzle.date+
+        ' — '+
+        puzzle.title+
+        ' ('+
+        puzzle.difficulty+
+        ')';
+
+      button.onclick=()=>load(puzzle);
+      archive.append(button);
+    });
+}
+
+fetch('puzzles.json')
+.then(response=>response.json())
+.then(result=>{
+  data=result;
+
+  const today=new Date().toISOString().slice(0,10);
+
+  const puzzle=
+    data.puzzles.find(item=>item.date===today) ||
+    [...data.puzzles].sort((a,b)=>b.date.localeCompare(a.date))[0];
+
+  renderArchive();
+  load(puzzle);
+})
+.catch(()=>{
+  msg('Impossibile caricare puzzles.json.');
+});
+</script>
+
+</body>
+</html>
