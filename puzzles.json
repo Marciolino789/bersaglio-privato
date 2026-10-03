@@ -57,14 +57,12 @@
         "Cerca trasformazioni e riferimenti letterari.",
         "La parola finale è al centro."
       ]
-    }
-  ]
-},
-  {
+    },
+    {
       "id": "2026-10-04",
       "date": "2026-10-04",
       "title": "Bersaglio del giornino",
-      "difficulty": "FACILE",
+      "difficulty": "Facile",
       "start": "CASTELLO",
       "end": "PIZZA",
       "words": [
@@ -126,9 +124,9 @@
         "PIZZA"
       ],
       "hints": [
-        "Parti dal poeta greco.",
-        "Cerca trasformazioni e riferimenti letterari.",
-        "La parola finale è al centro."
+        "Parti dal castello.",
+        "Ogni passaggio collega una parola alla successiva.",
+        "La destinazione finale è un classico italiano."
       ]
     }
   ]
