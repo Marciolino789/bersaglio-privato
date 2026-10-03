@@ -7,7 +7,7 @@
       "difficulty": "Media",
       "start": "ACCAPPATOIO",
       "end": "SARA",
-      "words": [ 
+      "words": [
         "ACCAPPATOIO",
         "MESSA",
         "SOCCIA",
@@ -29,12 +29,7 @@
         "BACIATA",
         "POSTA",
         "FOGLIE",
-        "LIDO",
-        "CASSA",
-        "POEMA",
-        "ALBERI",
-        "SARA"
-        
+        "LIDO"
       ],
       "solution": [
         "ACCAPPATOIO",
@@ -62,8 +57,8 @@
         "SARA"
       ],
       "hints": [
-        "Parti dal poeta greco.",
-        "Cerca trasformazioni e riferimenti letterari.",
+        "Parti dall'accappatoio.",
+        "Le parole si trasformano per suono, significato o associazione.",
         "La parola finale è al centro."
       ]
     },
@@ -100,8 +95,7 @@
         "MERITO",
         "SAN PIETRO",
         "LONTANI",
-        "PUGLIA",
-        "PIZZA"
+        "PUGLIA"
       ],
       "solution": [
         "CASTELLO",
