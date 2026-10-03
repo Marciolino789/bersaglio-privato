@@ -481,7 +481,7 @@ function renderArchive(){
     });
 }
 
-fetch('puzzles.json')
+fetch('puzzles.json?version='+Date.now(), {cache:'no-store'})
 .then(response=>response.json())
 .then(result=>{
   data=result;
