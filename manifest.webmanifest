@@ -1,6 +1,6 @@
 {
-  "name": "Bersaglio Privato",
-  "short_name": "Bersaglio",
+  "name": "Il BerSARAglio",
+  "short_name": "BerSARAglio",
   "description": "Gioco privato del Bersaglio enigmistico.",
   "start_url": "./",
   "display": "standalone",
