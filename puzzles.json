@@ -70,33 +70,33 @@
       "start": "CASTELLO",
       "end": "POTASSIO",
       "words": [
-     "CASTELLO",
-"COMMEDIA",
-"PODIO",
-"SCIO'",
-"MONDANI",
-"SFOLLATE",
-"TROFEI",
-"FERITO",
-"K",
-"LONTANI",
-"PRIMO",
-"INVERNO",
-"RISATE",
-"SCOLLATE",
-"ULTIMO",
-"RISAIE",
-"CANTANTE",
-"ANDATE VIA",
-"MERITO",
-"CONTANTE",
-"MONTANI",
-"INFERNO",
-"MONDINA",
-"COSTANTE",
-"SCI",
-"REMOTI",
-"POTASSIO"
+        "CASTELLO",
+        "COMMEDIA",
+        "PODIO",
+        "SCIO'",
+        "MONDANI",
+        "SFOLLATE",
+        "TROFEI",
+        "FERITO",
+        "K",
+        "LONTANI",
+        "PRIMO",
+        "INVERNO",
+        "RISATE",
+        "SCOLLATE",
+        "ULTIMO",
+        "RISAIE",
+        "CANTANTE",
+        "ANDATE VIA",
+        "MERITO",
+        "CONTANTE",
+        "MONTANI",
+        "INFERNO",
+        "MONDINA",
+        "COSTANTE",
+        "SCI",
+        "REMOTI",
+        "POTASSIO"
       ],
       "solution": [
         "CASTELLO",
@@ -132,7 +132,7 @@
         "Ogni passaggio collega una parola alla successiva.",
         "La destinazione finale è un classico italiano."
       ]
-    }
+    },
     {
       "id": "2026-10-15",
       "date": "2026-10-15",
@@ -164,7 +164,7 @@
         "FACCIA",
         "GPS",
         "CORRIERE",
-        "PIENO",
+        "PIENO"
       ],
       "solution": [
         "COLAZIONE",
@@ -192,12 +192,12 @@
         "VISO",
         "VINO",
         "PINO",
-        "DANIELE",
-              ],
+        "DANIELE"
+      ],
       "hints": [
-        "COS è UN ASTORE?.",
+        "COS'È UN ASTORE?",
         "RICORDA DI ANAGRAMMARE!",
-        "POSSONO ESSERCI SEMPRE PIU' SIGNIFICATI DI UNA STESSA PAROLA"
+        "POSSONO ESSERCI SEMPRE PIÙ SIGNIFICATI DI UNA STESSA PAROLA"
       ]
     }
   ]
